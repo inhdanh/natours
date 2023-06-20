@@ -34,7 +34,7 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, 'Please confirm your password'],
     validate: {
-      // This only works on CREATE and SAVE!!
+      // This only works on CREATE and SAVE!! (not working on findByIdAndUpdate)
       validator: function (el) {
         return el === this.password;
       },
@@ -90,8 +90,6 @@ userSchema.methods.createPasswordResetToken = function () {
     .createHash('sha256')
     .update(resetToken)
     .digest('hex');
-
-  console.log({ resetToken }, this.passwordResetToken);
 
   this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
   return resetToken;
