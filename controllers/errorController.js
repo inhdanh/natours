@@ -23,32 +23,59 @@ const handleJWTError = () =>
 const handleJWTExpiredError = () =>
   new AppError('Your token has expired!. Please login again!', 401);
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
+const sendErrorDev = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    // API
+    return res.status(err.statusCode).json({
+      status: err.status,
+      error: err,
+      message: err.message,
+      stack: err.stack,
+    });
+  } else {
+    // RENDERED WEBSITE
+    return res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
+    });
+  }
 };
 
-const sendErrorProd = (err, res) => {
-  // Operational, trusted error: send message to client
-  if (err.isOperational) {
-    res.status(err.statusCode).json({
-      status: err.status,
-      message: err.message,
-    });
+const sendErrorProd = (err, req, res) => {
+  const errorTitle = 'Something went wrong!';
+  const errorMessage = 'Please try again later.';
 
-    // Programing or other unknown error: dont leak errors details
-  } else {
+  if (req.originalUrl.startsWith('/api')) {
+    // Operational, trusted error: send message to client
+    if (err.isOperational) {
+      return res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
+
+    // Programming or other unknown error: don't leak error details
     console.log('ERROR', err);
-
-    res.status(500).json({
+    return res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',
     });
   }
+
+  // RENDERED WEBSITE
+  if (err.isOperational) {
+    return res.status(err.statusCode).render('error', {
+      title: errorTitle,
+      msg: err.message,
+    });
+  }
+
+  // Programming or other unknown error: don't leak error details
+  console.log('ERROR', err);
+  return res.status(err.statusCode).render('error', {
+    title: errorTitle,
+    msg: errorMessage,
+  });
 };
 
 module.exports = (err, req, res, next) => {
@@ -56,9 +83,10 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err };
+    error.message = err.message;
 
     // Need update (reference to new error response by MongoDB)
     if (err.name === 'CastError') {
@@ -77,6 +105,6 @@ module.exports = (err, req, res, next) => {
       error = handleJWTExpiredError();
     }
 
-    sendErrorProd(error, res);
+    sendErrorProd(error, req, res);
   }
 };
