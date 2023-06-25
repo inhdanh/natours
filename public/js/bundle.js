@@ -12132,6 +12132,9 @@ var updateSettings = /*#__PURE__*/function () {
           res = _context.sent;
           if (res.data.status === 'success') {
             (0, _alerts.showAlert)('success', "".concat(type.toUpperCase(), " updated successfully!"));
+            window.setTimeout(function () {
+              location.reload(true);
+            });
           }
           _context.next = 11;
           break;
@@ -12317,12 +12320,11 @@ if (logoutBtn) {
 if (userDataForm) {
   userDataForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var name = document.getElementById('name').value;
-    var email = document.getElementById('email').value;
-    (0, _updateSetting.updateSettings)({
-      name: name,
-      email: email
-    }, 'data');
+    var form = new FormData();
+    form.append('name', document.getElementById('name').value);
+    form.append('email', document.getElementById('email').value);
+    form.append('photo', document.getElementById('photo').files[0]);
+    (0, _updateSetting.updateSettings)(form, 'data');
   });
 }
 if (userPasswordForm) {
