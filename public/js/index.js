@@ -17,7 +17,6 @@ if (mapBox) {
 }
 
 if (loginForm) {
-  console.log('loginForm');
   loginForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
@@ -67,7 +66,6 @@ if (userPasswordForm) {
 }
 
 if (bookBtn) {
-  console.log('bookBtn');
   bookBtn.addEventListener('click', (e) => {
     e.target.textContent = 'Processing...';
     const { tourId } = e.target.dataset;
